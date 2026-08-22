@@ -1,11 +1,13 @@
-amenity_id,type,name,lat,lon,is_24_7,source_file,source_type,source_date_range,normalization_notes
-AMN_0001,TOILET,MCD Public Toilet CP,28.632,77.218,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0002,HOSPITAL,LNJP Hospital,28.6366,77.241,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0003,TOILET,Swachh Complex Kashmere Gate,28.667,77.228,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0004,HOSPITAL,AIIMS Hospital,28.5672,77.21,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0005,PHARMACY,24/7 Apollo Pharmacy,28.568,77.211,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0006,TOILET,MCD Toilet Hauz Khas,28.548,77.202,False,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0007,HOSPITAL,Safdarjung Hospital,28.5695,77.208,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0008,TOILET,Sulabh Shauchalaya Dwarka,28.553,77.059,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0009,PHARMACY,Max Pharmacy Saket,28.525,77.207,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
-AMN_0010,TOILET,MCD Toilet Karol Bagh,28.645,77.189,False,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
+facility_id,facility_type,amenity_id,type,name,lat,lon,address,district,distance_m,is_open,cleanliness_rating,safety_rating,is_accessible,verification_count,last_verified_timestamp,is_24_7,source_file,source_type,source_date_range,normalization_notes
+WSH_0001,washroom,AMN_0001,TOILET,MCD Public Toilet CP,28.632,77.218,Connaught Place Block A,New Delhi,350,True,CLEAN,SAFE,True,8,2026-08-22T11:45:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Verified MCD Smart Toilet with wheelchair ramp and attendant.
+AMN_0002,hospital,AMN_0002,HOSPITAL,LNJP Hospital,28.6366,77.241,Delhi Gate JLN Marg,Central,1200,True,CLEAN,SAFE,True,42,2026-08-22T08:00:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
+WSH_0003,washroom,AMN_0003,TOILET,Swachh Complex Kashmere Gate,28.667,77.228,Gate 5 ISBT Kashmere Gate,North,480,True,AVERAGE,SAFE,True,14,2026-08-22T09:15:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,High footfall transit hub washroom.
+AMN_0004,hospital,AMN_0004,HOSPITAL,AIIMS Hospital,28.5672,77.21,Sri Aurobindo Marg Ansari Nagar,South,2100,True,CLEAN,SAFE,True,95,2026-08-22T10:30:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
+AMN_0005,pharmacy,AMN_0005,PHARMACY,24/7 Apollo Pharmacy,28.568,77.211,Ansari Nagar Market,South,2150,True,CLEAN,SAFE,True,19,2026-08-22T12:00:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
+WSH_0006,washroom,AMN_0006,TOILET,MCD Toilet Hauz Khas,28.548,77.202,Hauz Khas Village Entry,South,820,False,DIRTY,CONCERN,False,3,2026-08-16T14:20:00+05:30,False,delhi_amenities_v1.csv,REAL,2024-2025,Reported closed for maintenance.
+AMN_0007,hospital,AMN_0007,HOSPITAL,Safdarjung Hospital,28.5695,77.208,Ring Road Opposite AIIMS,South,2300,True,CLEAN,SAFE,True,68,2026-08-22T07:45:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
+WSH_0008,washroom,AMN_0008,TOILET,Sulabh Shauchalaya Dwarka,28.553,77.059,Dwarka Sector 10 Metro Station,South West,620,True,CLEAN,SAFE,True,22,2026-08-21T18:30:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Verified Sulabh complex with female sanitation officer.
+AMN_0009,pharmacy,AMN_0009,PHARMACY,Max Pharmacy Saket,28.525,77.207,Press Enclave Road Saket,South,3400,True,CLEAN,SAFE,True,11,2026-08-21T16:00:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Categories mapped to standard OpenStreetMap tags.
+WSH_0010,washroom,AMN_0010,TOILET,MCD Toilet Karol Bagh,28.645,77.189,Ajmal Khan Road Market,Central,750,True,AVERAGE,UNSAFE,False,5,2026-08-15T10:00:00+05:30,False,delhi_amenities_v1.csv,REAL,2024-2025,Poor lighting in alleyway reported by users.
+WSH_0011,washroom,AMN_0011,TOILET,NDMC Pink Toilet Khan Market,28.6002,77.2271,Khan Market Front Entry,New Delhi,290,True,CLEAN,SAFE,True,31,2026-08-22T12:15:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Dedicated women-only facility with sanitary vending machines.
+WSH_0012,washroom,AMN_0012,TOILET,NDMC Pink Toilet South Ext,28.5698,77.2215,South Extension Part 1 Market,South,410,True,CLEAN,SAFE,True,18,2026-08-20T08:30:00+05:30,True,delhi_amenities_v1.csv,REAL,2024-2025,Women-only facility verified.

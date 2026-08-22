@@ -1,9 +1,15 @@
 import axios from 'axios';
-import { JourneyResponse, ContextUpdateEvent, ContextUpdateResponse, Location, PublicToilet } from '../types/api';
+import {
+  JourneyResponse,
+  ContextUpdateEvent,
+  ContextUpdateResponse,
+  Location,
+  PublicToilet,
+  WashroomFacility,
+} from '../types/api';
 
 // Use Expo environment variable or fallback to localhost
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -13,8 +19,19 @@ const apiClient = axios.create({
 });
 
 export const sakhiApi = {
-  getPublicToilets: async (): Promise<PublicToilet[]> => {
-    const response = await apiClient.get<PublicToilet[]>('/amenities/public-toilets');
+  getPublicToilets: async (origin?: Location | null): Promise<PublicToilet[]> => {
+    const params = origin
+      ? { lat: origin.latitude, lon: origin.longitude }
+      : undefined;
+    const response = await apiClient.get<PublicToilet[]>('/amenities/public-toilets', { params });
+    return response.data;
+  },
+
+  getWashroomFacilities: async (origin?: Location | null): Promise<WashroomFacility[]> => {
+    const params = origin
+      ? { lat: origin.latitude, lon: origin.longitude }
+      : undefined;
+    const response = await apiClient.get<WashroomFacility[]>('/amenities/washrooms', { params });
     return response.data;
   },
 
@@ -40,5 +57,5 @@ export const sakhiApi = {
       trigger_source: 'manual',
     });
     return response.data;
-  }
+  },
 };

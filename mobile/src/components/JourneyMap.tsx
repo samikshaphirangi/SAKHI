@@ -12,6 +12,8 @@ interface JourneyMapProps {
   onSegmentPress: (segment: JourneySegment) => void;
   publicToilets: PublicToilet[];
   showPublicToilets: boolean;
+  selectedToiletId?: string | null;
+  onToiletPress?: (toilet: PublicToilet) => void;
   onNavigateRequest: () => void;
 }
 
@@ -38,6 +40,8 @@ export default function JourneyMap({
   onSegmentPress,
   publicToilets,
   showPublicToilets,
+  selectedToiletId,
+  onToiletPress,
   onNavigateRequest,
 }: JourneyMapProps) {
   const initialRegion = useMemo(() => mapRegion(origin, destination), [origin, destination]);
@@ -78,15 +82,25 @@ export default function JourneyMap({
         {origin && <Marker coordinate={origin} pinColor="#16a34a" title="Origin" />}
         {destination && <Marker coordinate={destination} pinColor="#dc2626" title="Destination" />}
 
-        {showPublicToilets && publicToilets.map((toilet) => (
-          <Marker
-            key={toilet.id}
-            coordinate={{ latitude: toilet.latitude, longitude: toilet.longitude }}
-            pinColor="#7c3aed"
-            title={toilet.name}
-            description={[toilet.type, toilet.address, toilet.district].filter(Boolean).join(' · ')}
-          />
-        ))}
+        {showPublicToilets && publicToilets.map((toilet) => {
+          const toiletId = toilet.facility_id || toilet.id || `${toilet.latitude}-${toilet.longitude}`;
+          const isSelected = selectedToiletId === toiletId;
+          return (
+            <Marker
+              key={toiletId}
+              coordinate={{ latitude: toilet.latitude, longitude: toilet.longitude }}
+              pinColor={isSelected ? '#ec4899' : '#7c3aed'}
+              title={`🚻 ${toilet.name || 'Washroom'}`}
+              description={[
+                toilet.is_open ? '🟢 Open' : '🔴 Closed',
+                `Cleanliness: ${toilet.cleanliness_rating || 'Clean'}`,
+                `Safety: ${toilet.safety_rating || 'Safe'}`,
+                toilet.address || toilet.district,
+              ].filter(Boolean).join(' · ')}
+              onPress={() => onToiletPress && onToiletPress(toilet)}
+            />
+          );
+        })}
       </MapView>
     </View>
   );

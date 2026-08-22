@@ -7,10 +7,11 @@ import SegmentSafetyPanel from '../components/SegmentSafetyPanel';
 import ContextUpdatePanel from '../components/ContextUpdatePanel';
 import EmergencyPanel from '../components/EmergencyPanel';
 import DeadManSwitchPanel from '../components/DeadManSwitchPanel';
+import WashroomFacilityCard from '../components/WashroomFacilityCard';
 import { sakhiApi } from '../api/sakhiApi';
 import { cacheJourney, getCachedJourney } from '../api/cache';
 import { useAccessibility } from '../contexts/AccessibilityContext';
-import { JourneyResponse, Location, RouteOption, JourneySegment, ContextUpdateResponse, PublicToilet } from '../types/api';
+import { JourneyResponse, Location, RouteOption, JourneySegment, ContextUpdateResponse, PublicToilet, WashroomFacility } from '../types/api';
 import { Accelerometer } from 'expo-sensors';
 
 const SHAKE_THRESHOLD = 1.8; // g-force threshold for a shake (lowered for easier testing)
@@ -28,7 +29,8 @@ export default function JourneyDashboard() {
   const [isOffline, setIsOffline] = useState(false);
   const [isShakeEnabled, setIsShakeEnabled] = useState(true);
   const [showPublicToilets, setShowPublicToilets] = useState(false);
-  const [publicToilets, setPublicToilets] = useState<PublicToilet[]>([]);
+  const [publicToilets, setPublicToilets] = useState<WashroomFacility[]>([]);
+  const [selectedToilet, setSelectedToilet] = useState<WashroomFacility | null>(null);
   const lastShakeTime = React.useRef(0);
 
   React.useEffect(() => {
@@ -70,7 +72,7 @@ export default function JourneyDashboard() {
       const response = await sakhiApi.createJourney(origin, destination);
       setJourney(response);
       try {
-        setPublicToilets(await sakhiApi.getPublicToilets());
+        setPublicToilets(await sakhiApi.getWashroomFacilities(origin));
       } catch (amenityError) {
         console.warn('Could not load public toilet locations:', amenityError);
         setPublicToilets([]);
@@ -192,6 +194,8 @@ export default function JourneyDashboard() {
               onSegmentPress={setSelectedSegment}
               publicToilets={publicToilets}
               showPublicToilets={showPublicToilets}
+              selectedToiletId={selectedToilet?.facility_id || selectedToilet?.id || null}
+              onToiletPress={(toilet) => setSelectedToilet(toilet)}
               onNavigateRequest={openSelectedRouteInGoogleMaps}
             />
           </View>
@@ -210,7 +214,7 @@ export default function JourneyDashboard() {
             <View style={{ flex: 1 }}>
               <Text style={currentStyles.amenityToggleTitle}>Right to PEE</Text>
               <Text style={currentStyles.amenityToggleCaption}>
-                {publicToilets.length ? `${publicToilets.length} public toilets available on the map` : 'Toilet locations unavailable offline'}
+                {publicToilets.length ? `${publicToilets.length} verified public washrooms near route` : 'Washroom locations unavailable offline'}
               </Text>
             </View>
             <TouchableOpacity
@@ -221,10 +225,48 @@ export default function JourneyDashboard() {
               style={[currentStyles.amenityToggle, showPublicToilets && currentStyles.amenityToggleActive]}
             >
               <Text style={[currentStyles.amenityToggleText, showPublicToilets && currentStyles.amenityToggleTextActive]}>
-                {showPublicToilets ? 'LOCATIONS ON' : 'SHOW LOCATIONS'}
+                {showPublicToilets ? 'WASHROOMS ON' : 'SHOW WASHROOMS'}
               </Text>
             </TouchableOpacity>
           </View>
+
+          {showPublicToilets && publicToilets.length > 0 && (
+            <View style={currentStyles.washroomContainer}>
+              <View style={currentStyles.washroomHeaderRow}>
+                <Text style={currentStyles.washroomHeaderTitle}>🚻 Verified Public Washrooms</Text>
+                {selectedToilet && (
+                  <TouchableOpacity
+                    onPress={() => setSelectedToilet(null)}
+                    style={currentStyles.clearFilterBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel="Show all washrooms"
+                  >
+                    <Text style={currentStyles.clearFilterText}>Show All ({publicToilets.length})</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Text style={currentStyles.washroomHeaderSubtitle}>
+                {selectedToilet
+                  ? 'Showing selected washroom verification details:'
+                  : 'Verified status, cleanliness, safety & recency:'}
+              </Text>
+
+              {(selectedToilet ? [selectedToilet] : publicToilets).map((toilet) => (
+                <WashroomFacilityCard
+                  key={toilet.facility_id || toilet.id}
+                  facility={toilet}
+                  selected={selectedToilet?.facility_id === toilet.facility_id || selectedToilet?.id === toilet.id}
+                  onPress={(facility) => {
+                    if (selectedToilet?.facility_id === facility.facility_id) {
+                      setSelectedToilet(null);
+                    } else {
+                      setSelectedToilet(facility);
+                    }
+                  }}
+                />
+              ))}
+            </View>
+          )}
           
           {isAccessibleMode && (
             <View style={{backgroundColor: '#fff', padding: 8, borderWidth: 2, borderColor: '#000', marginBottom: 10}}>
@@ -385,6 +427,36 @@ const styles = StyleSheet.create({
   },
   amenityToggleTextActive: {
     color: '#fff',
+  },
+  washroomContainer: {
+    marginBottom: 14,
+  },
+  washroomHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  washroomHeaderTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#374151',
+  },
+  washroomHeaderSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  clearFilterBtn: {
+    backgroundColor: '#ede9fe',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  clearFilterText: {
+    color: '#6d28d9',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   errorBox: {
     backgroundColor: '#fee2e2',
@@ -644,6 +716,38 @@ const accessibleStyles = StyleSheet.create({
     marginTop: 6,
     marginBottom: 10,
     textAlign: 'center',
+  },
+  washroomContainer: {
+    marginBottom: 16,
+  },
+  washroomHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  washroomHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  washroomHeaderSubtitle: {
+    fontSize: 14,
+    color: '#000',
+    marginBottom: 8,
+  },
+  clearFilterBtn: {
+    backgroundColor: '#000',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  clearFilterText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 'bold',
   },
 });
 

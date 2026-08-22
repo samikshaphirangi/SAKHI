@@ -78,8 +78,12 @@ class SegmentLookupService:
                                      ["latitude", "longitude"])
         self._medical = self._load(os.path.join(raw_dir, "medical_facilities.csv"),
                                    ["latitude", "longitude"])
-        self._amenities = self._load(os.path.join(raw_dir, "public_amenities.csv"),
-                                     ["latitude", "longitude"])
+        norm_dir = os.path.join(data_root, "normalized")
+        amenities_norm_path = os.path.join(norm_dir, "delhi_amenities_normalized.csv")
+        amenities_raw_path = os.path.join(raw_dir, "public_amenities.csv")
+        amenities_path = amenities_norm_path if os.path.exists(amenities_norm_path) else amenities_raw_path
+
+        self._amenities = self._load(amenities_path, ["latitude", "longitude"])
 
         # ------------------------------------------------------------------
         # Synthetic / proxy data (explicitly labelled)
@@ -185,26 +189,81 @@ class SegmentLookupService:
 
         return result
 
-    def get_public_toilets(self) -> list[Dict[str, Any]]:
-        """Return public toilet locations from the verified amenities dataset."""
-        if self._amenities.empty or "type" not in self._amenities.columns:
+    def get_public_toilets(self, origin_lat: Optional[float] = None, origin_lon: Optional[float] = None) -> list[Dict[str, Any]]:
+        """Return public toilet locations formatted with all washroom schema attributes."""
+        return self.get_washroom_facilities(origin_lat=origin_lat, origin_lon=origin_lon)
+
+    def get_washroom_facilities(self, origin_lat: Optional[float] = None, origin_lon: Optional[float] = None) -> list[Dict[str, Any]]:
+        """Return washroom facilities with status, cleanliness, safety, accessibility and recency attributes."""
+        if self._amenities.empty:
+            return []
+
+        type_col = "facility_type" if "facility_type" in self._amenities.columns else "type"
+        if type_col not in self._amenities.columns:
             return []
 
         toilets = self._amenities[
-            self._amenities["type"].astype(str).str.contains("toilet|washroom", case=False, na=False)
+            self._amenities[type_col].astype(str).str.contains("toilet|washroom", case=False, na=False)
         ]
-        return [
-            {
-                "id": str(row.get("id", index)),
-                "name": str(row.get("name", "Public toilet")),
-                "type": str(row.get("type", "Public Toilet")),
+
+        results = []
+        for index, row in toilets.iterrows():
+            fid = str(row.get("facility_id", row.get("amenity_id", row.get("id", f"WSH_{index:04d}"))))
+            lat = float(row.get("latitude", row.get("lat", 0.0)))
+            lon = float(row.get("longitude", row.get("lon", 0.0)))
+
+            if origin_lat is not None and origin_lon is not None:
+                dist_m = round(_haversine_m(origin_lat, origin_lon, lat, lon), 1)
+            else:
+                dist_m = float(row.get("distance_m", 350.0))
+
+            is_open_val = row.get("is_open", True)
+            if isinstance(is_open_val, str):
+                is_open = is_open_val.strip().lower() in ("true", "1", "yes", "open")
+            else:
+                is_open = bool(is_open_val)
+
+            is_acc_val = row.get("is_accessible", True)
+            if isinstance(is_acc_val, str):
+                is_accessible = is_acc_val.strip().lower() in ("true", "1", "yes")
+            else:
+                is_accessible = bool(is_acc_val)
+
+            cleanliness = str(row.get("cleanliness_rating", "CLEAN")).strip().upper()
+            if cleanliness not in ("CLEAN", "AVERAGE", "DIRTY"):
+                cleanliness = "CLEAN"
+
+            safety = str(row.get("safety_rating", "SAFE")).strip().upper()
+            if safety not in ("SAFE", "CONCERN", "UNSAFE"):
+                safety = "SAFE"
+
+            try:
+                ver_count = int(row.get("verification_count", 1))
+            except (ValueError, TypeError):
+                ver_count = 1
+
+            last_verified = str(row.get("last_verified_timestamp", "2026-08-22T11:45:00+05:30"))
+
+            results.append({
+                "facility_id": fid,
+                "id": fid,  # alias for backward compatibility
+                "facility_type": "washroom",
+                "type": "Public Toilet",  # alias for backward compatibility
+                "name": str(row.get("name", "Public Washroom")),
                 "address": str(row.get("address", "")),
                 "district": str(row.get("district", "")),
-                "latitude": float(row["latitude"]),
-                "longitude": float(row["longitude"]),
-            }
-            for index, row in toilets.iterrows()
-        ]
+                "latitude": lat,
+                "longitude": lon,
+                "distance_m": dist_m,
+                "is_open": is_open,
+                "cleanliness_rating": cleanliness,
+                "safety_rating": safety,
+                "is_accessible": is_accessible,
+                "verification_count": ver_count,
+                "last_verified_timestamp": last_verified,
+            })
+
+        return results
 
     def get_synthetic_proxies(self, lat: float, lon: float) -> Dict[str, Any]:
         """
@@ -270,6 +329,10 @@ class SegmentLookupService:
             return pd.DataFrame()
         try:
             df = pd.read_csv(path)
+            if "lat" in df.columns and "latitude" not in df.columns:
+                df = df.rename(columns={"lat": "latitude"})
+            if "lon" in df.columns and "longitude" not in df.columns:
+                df = df.rename(columns={"lon": "longitude"})
             missing = [c for c in required_cols if c not in df.columns]
             if missing:
                 return pd.DataFrame()

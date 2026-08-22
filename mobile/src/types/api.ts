@@ -3,15 +3,30 @@ export interface Location {
   longitude: number;
 }
 
-export interface PublicToilet {
-  id: string;
+export type CleanlinessRating = 'CLEAN' | 'AVERAGE' | 'DIRTY';
+export type SafetyRating = 'SAFE' | 'CONCERN' | 'UNSAFE';
+
+export interface WashroomFacility {
+  facility_id: string;
+  facility_type: string; // 'washroom'
+  id?: string;
   name: string;
-  type: string;
-  address: string;
-  district: string;
+  type?: string;
+  address?: string;
+  district?: string;
   latitude: number;
   longitude: number;
+  distance_m: number;
+  is_open: boolean;
+  cleanliness_rating: CleanlinessRating;
+  safety_rating: SafetyRating;
+  is_accessible: boolean;
+  verification_count: number;
+  last_verified_timestamp: string;
 }
+
+// Alias for backward compatibility
+export type PublicToilet = WashroomFacility;
 
 export interface JourneySegment {
   segment_id: string;
